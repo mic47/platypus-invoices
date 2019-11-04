@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <style>
+
+@page {
+  size: A4;
+  margin: 0.5cm;
+}
+
+table.asana {
+  width: 100%;
+}
+
+table.asana td {
+  border-top: 1px solid;
+}
+table.asana td, th {
+  text-align: left;
+}
+    </style>
+  </head>
+  <body> 
+    <h2>Invoice {{payment_reference}} (Tasks closed between {{date_from}} and {{date_to}})</h2>
+    <table class="asana">
+      <tr><th>Closed At</th><th>Task Name</th><th>Projects</th></tr>
+      {% for task in tasks %}
+      <tr><td>{{task['completed_at_day']}}</td><td>{{task['name']}}</td><td>{{task['projects_string']}}</td></tr>
+      {% endfor %}
+    </table>
+      
+  </body>
+</html>

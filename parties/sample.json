@@ -1,0 +1,11 @@
+{
+  "__DOCUMENTATION__": "You need all of these for supplier. For client, you need only name, address, tax_id",
+  "name": "FULL NAME",
+  "address": "FULL ADDRESS\nON MULTIPLE\nLINES",
+  "id": 000000000,
+  "tax_id": 0000000000,
+  "registration": "Číslo živn.registra: FILL HERE, okresný úrad AND HERE",
+  "bank": "YOUR BANK GOES HERE",
+  "iban": "WHERE YOU WANT TO RECEIVE MONEY",
+  "swift": "TODO"
+}

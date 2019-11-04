@@ -1,0 +1,117 @@
+<html>
+  <head>
+    <style>
+* {
+  box-sizing: border-box;
+}
+
+@page {
+  size: A4;
+  margin: 0.5cm;
+}
+
+.columnt_50 {
+  float: left;
+  width: 50%;
+  position: relative;
+}
+.column {
+  float: left;
+  width: 100%;
+}
+
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.box {
+  border-style: dotted;
+  border-width: medium;
+  padding: 0.2em;
+  margin:0.1em;
+  overflow: auto;
+}
+
+table.invoice {
+  width: 100%;
+}
+
+table.invoice td.item, th.item {
+  text-align: left !important;
+}
+table.invoice td {
+  border-top: 1px solid;
+}
+table.invoice td, th {
+  text-align: right;
+}
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <div class="columnt_50">
+        <div class="box"> 
+          <h3>Supplier:</h3> <pre>{{supplier_name}}
+{{supplier_address}}</pre>
+          ID: {{supplier_id}}<br/>
+          Tax ID: {{supplier_tax_id}}<br/>
+          {{supplier_registration}}<br/>
+          {{supplier_bank_name}}<br/>
+          IBAN: {{supplier_iban}}<br/>
+          SWIFT: {{supplier_swift}}<br/>
+          Payment reference: {{payment_reference}}<br/>
+        </div>
+      </div>
+      <div class="columnt_50">
+        <div class="box"><h2>Invoice {{payment_reference}}</h2></div>
+        <div class="box"> <h3>Client:</h3><pre>{{client_name}}
+{{client_address}}</pre>EIN: {{client_tax_id}}</div>
+        <div class="box">
+          <table>
+            <tr><td>Issue date:</td><td>{{issue_date}}</td></tr>
+            <tr><td>Delivery date:</td><td>{{delivery_date}}</td></tr>
+            <tr><td>Due date:</td><td>{{due_date}}</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+
+      <div class="column">
+        <div class="box">
+          In accordance with Service Agreement with {{client_name}}, please find invoiced services below:<br/><br/>
+          <table class="invoice">
+            <tr><th class="item">Delivery name and description</th><th>Qty</th><th>Unit</th><th>Unit price</th><th>Total</th></tr>
+            {% for delivery in deliveries %}
+            <tr><td class="item">{{delivery['description']}}</td><td>{{delivery['quantity']}}</td><td>{{delivery['unit']}}</td><td>{{delivery['unit_price']}}&euro;</td><td>{{delivery['total']}}&euro;</td></tr>
+
+            {% endfor %}
+            <tr><td class="item" colspan=4 stype="text-align: left"><b>Invoice total</b></td><td><b>{{total}}&euro;<b></td></tr>
+
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="columnt_50">
+        <div class="box"> <h4>Note</h4> We are not VAT payers.</div>
+      </div>
+      <div class="columnt_50">
+        <div class="box" style="height: 5.8em">Signature</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="box">
+        <h4>Summary</h4>
+        <div><b>IBAN:</b> {{supplier_iban}} </div>
+        <div><b>Payment reference:</b> {{payment_reference}} </div>
+        <div><b>Due date:</b> {{due_date}}</div>
+        <div><b>Total due:</b> {{total}}&euro;</div>
+      </div>
+    </div>
+  </body>
+</html>

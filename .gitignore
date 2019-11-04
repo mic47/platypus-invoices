@@ -3,4 +3,4 @@ parties/*
 !parties/sample.json
 invoices
 inputs/*
-inputs/sample.json
+!inputs/sample.json
