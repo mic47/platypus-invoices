@@ -1,0 +1,6 @@
+secrets.json
+parties/*
+!parties/sample.json
+invoices
+inputs/*
+inputs/sample.json
