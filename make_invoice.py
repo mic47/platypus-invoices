@@ -219,6 +219,7 @@ def main():
     args = parse_arguments()
     if args.increment_from is not None:
         copy_and_increment(args.increment_from, args.invoice_file)
+        os.system(f"$EDITOR {args.invoice_file}")
     with open(args.invoice_file) as f:
         data = json.load(f)
     secrets = load_secrets(args.secrets, data["supplier"])
