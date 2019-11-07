@@ -1,7 +1,11 @@
 import argparse
+import copy
+import os
+import re
 from dateutil.parser import parse as parse_date
 import json
 import sys
+from datetime import datetime, timedelta
 
 import asana
 from jinja2 import Template
@@ -11,6 +15,7 @@ import weasyprint
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument("--invoice-file", type=str)
+    parser.add_argument("--increment-from", type=str)
     parser.add_argument("--parties", type=str, default="parties")
     parser.add_argument("--template", type=str, default="template.html")
     parser.add_argument("--asana-template", type=str, default="template-asana.html")
@@ -104,6 +109,16 @@ def generate_attachment_asana(args, data, output_prefix, secrets):
 
 
 def expand_data(args, data):
+    def recompute_if_missing(key, replacement):
+        if key not in data:
+            data[key] = replacement
+
+    # Compute dates
+    recompute_if_missing("delivery_date", data["date_to"])
+    recompute_if_missing(
+        "due_date", (parse_date(data["issue_date"], dayfirst=True) + timedelta(days=15)).strftime("%d.%m.%Y")
+    )
+
     # Compute totals
     total = 0
     for delivery in data["deliveries"]:
@@ -120,8 +135,90 @@ def expand_data(args, data):
     return data
 
 
+def end_of_month(date):
+    date = copy.copy(date)
+    date.replace(day=28)
+    day = timedelta(days=1)
+    cur_month = date.month
+    while (date + day).month == cur_month:
+        date = date + day
+    return date
+
+
+def parse_pretty_date(s):
+    return parse_date(s, dayfirst=True)
+
+
+def pretty_date(date):
+    return date.strftime("%d.%m.%Y")
+
+
+PR_FORMATS = [
+    "^(?P<prefix>..)(?P<year>{year})(?P<number>[0-9]*)$",
+    "^(?P<prefix>)(?P<year>{year})(?P<number>[0-9*])$",
+    "^(?P<year>)(?P<prefix>.*[^0-9])(?P<number>[0-9]*)$",
+    "^(?P<year>)(?P<prefix>)(?P<number>[0-9]*)$",
+]
+
+
+def increment_payment_reference(pr, prev_year, this_year):
+    match = None
+    for f in PR_FORMATS:
+        m = re.match(f, pr)
+        if m is not None:
+            match = m
+            break
+    if not match:
+        raise Exception(f"failed to parse payment reference {pr}")
+    prefix = match.group("prefix")
+    year = match.group("year")
+    number = match.group("number")
+    if year == str(prev_year):
+        year = str(this_year)
+    num_len = len(number)
+    number = str(int(number) + 1)
+    number = "0" * (num_len - len(number)) + number
+    return f"{prefix}{year}{number}"
+
+
+def copy_and_increment(input_file, output_file):
+    if os.path.exists(output_file):
+        print(f"Output file {output_file} exists!", file=sys.stderr)
+        sys.exit(1)
+    with open(input_file) as f:
+        data = json.load(f)
+    if "delivery_date" in data:
+        del data["delivery_date"]
+    if "due_date" in data:
+        del data["due_date"]
+
+    today = datetime.now().date()
+
+    date_to_previous = parse_date(data["date_to"], dayfirst=True).date()
+    date_from = date_to_previous + timedelta(days=1)
+    date_to = end_of_month(date_from)
+
+    if today - date_to > timedelta(5):
+        print(
+            f"WARNING: Generating invoice more than 5 days old ({date_to}, {today})! Bailing out",
+            file=sys.stderr,
+        )
+    data["date_from"] = pretty_date(date_from)
+    data["date_to"] = pretty_date(date_to)
+    data["issue_date"] = pretty_date(today)
+
+    data["payment_reference"] = increment_payment_reference(
+        data["payment_reference"], date_to_previous.year, date_to.year
+    )
+
+    with open(output_file, "w") as f:
+        json.dump(data, f, indent=4)
+
+
 def main():
     args = parse_arguments()
+    if args.increment_from is not None:
+        copy_and_increment(args.increment_from, args.invoice_file)
     with open(args.invoice_file) as f:
         data = json.load(f)
     secrets = load_secrets(args.secrets, data["supplier"])
