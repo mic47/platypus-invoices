@@ -2,8 +2,6 @@
   "client": "client_name",
   "supplier": "supplier_name",
   "issue_date": "4.11.2019",
-  "delivery_date": "31.10.2019",
-  "due_date": "20.11.2019",
   "date_from": "01.10.2019",
   "date_to": "31.10.2019",
   "payment_reference": "WHATEVER",
