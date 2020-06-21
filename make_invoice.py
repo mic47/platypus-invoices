@@ -91,6 +91,9 @@ def generate_invoice(args, data, output_prefix):
 
 
 def generate_attachment_asana(args, data, output_prefix, secrets):
+    if "asana_token" not in secrets:
+        print("Asana token is not present, skipping generating asana", file=sys.stderr)
+        return
     asana_client = asana.Client.access_token(secrets["asana_token"])
     tasks = list(
         sorted(
