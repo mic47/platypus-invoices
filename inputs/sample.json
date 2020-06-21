@@ -4,7 +4,7 @@
   "issue_date": "4.11.2019",
   "date_from": "01.10.2019",
   "date_to": "31.10.2019",
-  "payment_reference": "WHATEVER",
+  "payment_reference": "WHATEVER00001",
   "deliveries": [
     {
       "description": "READING SLASHDOT",
