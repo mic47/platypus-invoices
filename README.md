@@ -18,7 +18,7 @@ Just simple script to generate simple invoices and list from asana.
 4. Create input json for your invoice. See inputs/sample.json as example  
 5. `python make_invoice.py --invoice-file inputs/input_for_current_month.json` generates pdf report (in
   invoices directory)
-6. `python make_invoice.py --increment-from inputs/previous_month.json --invoice-file
-  inputs/input_for_current_month.json -- first take template from previous month, update there dates and so, and
+6. `python make_invoice.py --increment-from inputs/previous_month.json --invoice-file inputs/input_for_current_month.json` 
+  -- first take template from previous month, update there dates and so, and
   generate input for next month. Then it will open an editor, where you can change stuff (like amount of work)
   and then it will generate pdf.
