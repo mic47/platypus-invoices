@@ -73,7 +73,7 @@ def get_completed_tasks(asana_client, workspace, date_from, date_to):
 
 def load_secrets(secret_file, who):
     with open(secret_file) as f:
-        return json.load(f)[who]
+        return json.load(f).get(who, {})
 
 
 def generate_invoice(args, data, output_prefix):
