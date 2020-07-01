@@ -19,6 +19,7 @@ def parse_arguments():
     parser.add_argument("--parties", type=str, default="parties")
     parser.add_argument("--template", type=str, default="template.html")
     parser.add_argument("--asana-template", type=str, default="template-asana.html")
+    parser.add_argument("--oncall-template", type=str, default="template-oncall.html")
     parser.add_argument("--secrets", type=str, default="secrets.json")
     parser.add_argument(
         "--output-prefix", type=str, default="invoices/{supplier}_{client}_{payment_reference}"
@@ -89,6 +90,14 @@ def generate_invoice(args, data, output_prefix):
         print(rendered_html, file=f)
     weasyprint.HTML(string=rendered_html).write_pdf(f"{output_prefix}.pdf")
 
+def generate_oncall(args, data, output_prefix):
+    with open(args.oncall_template) as f:
+        t = Template("".join(f))
+    rendered_html = t.render(**data)
+    # Generate HTML and PDF
+    with open(f"{output_prefix}_oncall.html", "w") as f:
+        print(rendered_html, file=f)
+    weasyprint.HTML(string=rendered_html).write_pdf(f"{output_prefix}_oncall.pdf")
 
 def generate_attachment_asana(args, data, output_prefix, secrets):
     if "asana_token" not in secrets:
@@ -122,6 +131,34 @@ def expand_data(args, data):
         "due_date", (parse_date(data["issue_date"], dayfirst=True) + timedelta(days=15)).strftime("%d.%m.%Y")
     )
 
+    # Compute oncall
+    if "oncall" in data:
+        for sheet in data["oncall"]:
+            title = sheet["title"]
+            b_start = time_to_hours(sheet["business_start"])
+            b_end = time_to_hours(sheet["business_end"])
+            hourly_price = sheet["hourly_price"]
+            total_hours = 0
+            for item in sheet["items"]:
+                if item["workday"]:
+                    hours = hours_outside_business(b_start, b_end, time_to_hours(item["from"]), time_to_hours(item["to"]))
+                else:
+                    f, t = time_to_hours(item["from"]), time_to_hours(item["to"])
+                    assert f < t
+                    hours = t - f
+
+                item["hours"] = hours
+                item["price"] = hours * hourly_price
+                total_hours += hours
+            sheet["total_hours"] = total_hours
+            sheet["total_price"] = total_hours * hourly_price
+            data["deliveries"].append({
+                "description": title,
+                "quantity": total_hours,
+                "unit_price": hourly_price,
+                "unit": "hour",
+            })
+
     # Compute totals
     total = 0
     for delivery in data["deliveries"]:
@@ -135,7 +172,23 @@ def expand_data(args, data):
         with open(f"{args.parties}/{value}.json") as f:
             for k, v in json.load(f).items():
                 data[f"{prefix}_{k}"] = v
+
+
     return data
+
+def time_to_hours(s):
+    h, minutes = [int(x) for x in s.split(':')]
+    return h+minutes/60
+
+
+def hours_outside_business(business_start, business_end, time_start, time_end):
+    assert time_start < time_end
+    assert business_start < business_end
+    if time_end <= business_start or time_start >= business_end:
+        # no overlap
+        return time_end - time_start
+    return max(0, business_start - time_start) + max(0, time_end - business_end)
+
 
 
 def end_of_month(date):
@@ -231,6 +284,8 @@ def main():
     data = expand_data(args, data)
     generate_invoice(args, data, output_prefix)
     generate_attachment_asana(args, data, output_prefix, secrets)
+    if "oncall" in data:
+        generate_oncall(args, data, output_prefix)
 
 
 if __name__ == "__main__":

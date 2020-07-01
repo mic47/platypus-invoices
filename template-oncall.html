@@ -1,0 +1,38 @@
+<html>
+  <head>
+    <style>
+
+@page {
+  size: A4;
+  margin: 0.5cm;
+}
+
+table.asana {
+  width: 100%;
+}
+
+table.asana td {
+  border-top: 1px solid;
+}
+table.asana td, th {
+  text-align: left;
+}
+    </style>
+  </head>
+  <body> 
+    <h2>Invoice {{payment_reference}} Attachment</h2>
+    {% for timesheet in timesheets %}
+    <h3>{{timesheet['title']}}</h3>
+    Hours is total hours outside of Usual Business Hours.
+    <table class="asana">
+      <tr><th>Day</th><th>When</th><th>Description</th><th>Hours</th><th>Price</th></tr>
+      {% for item in timesheet['items'] %}
+      <tr><td>{{item['day']}}</td><td>{{item['from']}}-{{item['to']}}</td><td>{{item['details']}}</td><td>{{item['hours']}}</td><td>{{item['price']}}&euro;</td></tr>
+      {% endfor %}
+      <tr/>
+        <tr><td colspan=2>Total<td/><td>{{timesheet['total_hours']}}</td><td>{{timesheet['total_price']}}&euro;</td></tr>
+    </table>
+    {% endfor %}
+      
+  </body>
+</html>
