@@ -21,7 +21,7 @@ table.asana td, th {
   </head>
   <body> 
     <h2>Invoice {{payment_reference}} Attachment</h2>
-    {% for timesheet in timesheets %}
+    {% for timesheet in oncall %}
     <h3>{{timesheet['title']}}</h3>
     Hours is total hours outside of Usual Business Hours.
     <table class="asana">
